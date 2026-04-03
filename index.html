@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Effective GDR Calculator</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --card-alt: #222632;
+    --border: #2e3347;
+    --text: #e4e6ef;
+    --text-muted: #8b8fa3;
+    --accent: #6c72cb;
+    --red: #ef4444;
+    --red-bg: rgba(239,68,68,.12);
+    --yellow: #f59e0b;
+    --yellow-bg: rgba(245,158,11,.12);
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,.12);
+    --excellent: #3b82f6;
+    --excellent-bg: rgba(59,130,246,.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: .35rem;
+  }
+
+  .header p {
+    color: var(--text-muted);
+    font-size: .95rem;
+  }
+
+  .dashboard {
+    max-width: 960px;
+    margin: 0 auto;
+    display: grid;
+    gap: 1.5rem;
+  }
+
+  /* Input Cards Row */
+  .input-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+  }
+
+  .card-title {
+    font-size: .8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  .card-title .icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 5px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .7rem;
+    font-weight: 700;
+    color: #fff;
+  }
+
+  .sub-icon { background: var(--accent); }
+  .sw-icon { background: #8b5cf6; }
+  .def-icon { background: #f59e0b; }
+
+  .input-group {
+    margin-bottom: 1rem;
+  }
+
+  .input-group:last-child { margin-bottom: 0; }
+
+  .input-group label {
+    display: block;
+    font-size: .82rem;
+    color: var(--text-muted);
+    margin-bottom: .4rem;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input-wrap .prefix,
+  .input-wrap .suffix {
+    position: absolute;
+    color: var(--text-muted);
+    font-size: .9rem;
+    pointer-events: none;
+    font-weight: 500;
+  }
+
+  .input-wrap .prefix { left: 14px; }
+  .input-wrap .suffix { right: 14px; }
+
+  .input-wrap input {
+    width: 100%;
+    background: var(--card-alt);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: .7rem 1rem;
+    color: var(--text);
+    font-size: 1.1rem;
+    font-weight: 600;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .input-wrap input:focus {
+    border-color: var(--accent);
+  }
+
+  .input-wrap input.has-prefix { padding-left: 2rem; }
+  .input-wrap input.has-suffix { padding-right: 2.2rem; }
+
+  /* Sub-section divider inside a card */
+  .sub-section {
+    background: var(--card-alt);
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+  }
+
+  .sub-section:last-child { margin-bottom: 0; }
+
+  .sub-section-title {
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text);
+    margin-bottom: .85rem;
+    display: flex;
+    align-items: center;
+    gap: .4rem;
+  }
+
+  .sub-section .input-group { margin-bottom: .75rem; }
+  .sub-section .input-group:last-child { margin-bottom: 0; }
+
+  .sub-section .input-wrap input {
+    background: var(--card);
+  }
+
+  /* Renewals total */
+  .renewals-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(108, 114, 203, .08);
+    border: 1px dashed rgba(108, 114, 203, .3);
+    border-radius: 10px;
+    padding: .75rem 1.1rem;
+    margin-top: 1rem;
+  }
+
+  .renewals-total .rt-label {
+    font-size: .78rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .renewals-total .rt-value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* Result Section */
+  .result-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+  }
+
+  .result-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .result-card .label {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--text-muted);
+    margin-bottom: .75rem;
+  }
+
+  .result-card .value {
+    font-size: 3.2rem;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    margin-bottom: .5rem;
+    transition: color .3s;
+  }
+
+  .result-card .badge {
+    display: inline-block;
+    padding: .3rem .9rem;
+    border-radius: 20px;
+    font-size: .78rem;
+    font-weight: 600;
+    letter-spacing: .03em;
+    transition: all .3s;
+  }
+
+  .badge-red { background: var(--red-bg); color: var(--red); }
+  .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+  .badge-green { background: var(--green-bg); color: var(--green); }
+  .badge-excellent { background: var(--excellent-bg); color: var(--excellent); }
+
+  .color-red { color: var(--red); }
+  .color-yellow { color: var(--yellow); }
+  .color-green { color: var(--green); }
+  .color-excellent { color: var(--excellent); }
+
+  /* Gauge */
+  .gauge-container {
+    width: 100%;
+    max-width: 280px;
+    margin: 0 auto 1rem;
+  }
+
+  .gauge-svg {
+    width: 100%;
+    height: auto;
+  }
+
+  /* Breakdown */
+  .breakdown-card {
+    grid-column: 1 / -1;
+  }
+
+  .breakdown-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+
+  .breakdown-item {
+    background: var(--card-alt);
+    border-radius: 10px;
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .breakdown-item .bi-label {
+    font-size: .72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: .4rem;
+  }
+
+  .breakdown-item .bi-value {
+    font-size: 1.3rem;
+    font-weight: 700;
+  }
+
+  .breakdown-item .bi-sub {
+    font-size: .75rem;
+    color: var(--text-muted);
+    margin-top: .2rem;
+  }
+
+  /* Scale legend */
+  .scale {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .75rem;
+    margin-top: 1.25rem;
+  }
+
+  .scale-item {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .78rem;
+    color: var(--text-muted);
+  }
+
+  .scale-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* Bar chart */
+  .bar-chart {
+    margin-top: 1.5rem;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: .75rem;
+  }
+
+  .bar-label {
+    width: 140px;
+    font-size: .82rem;
+    color: var(--text-muted);
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  .bar-track {
+    flex: 1;
+    height: 28px;
+    background: var(--card-alt);
+    border-radius: 8px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    transition: width .6s ease, background .3s;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: .6rem;
+    font-size: .78rem;
+    font-weight: 600;
+    color: #fff;
+    min-width: 50px;
+  }
+
+  .bar-weight {
+    font-size: .75rem;
+    color: var(--text-muted);
+    width: 60px;
+    text-align: left;
+    flex-shrink: 0;
+  }
+
+  /* Threshold markers on bars */
+  .bar-track .marker {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(255,255,255,.15);
+  }
+
+  .bar-track .marker::after {
+    content: attr(data-label);
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: .6rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 700px) {
+    .input-row, .result-section { grid-template-columns: 1fr; }
+    .breakdown-row { grid-template-columns: 1fr 1fr; }
+    body { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Effective GDR Calculator</h1>
+  <p>Weighted Gross Dollar Retention across renewals (subscriptions + switches) and deferred revenue</p>
+</div>
+
+<div class="dashboard">
+
+  <!-- Input Row -->
+  <div class="input-row">
+    <!-- Renewals Card (with sub-sections) -->
+    <div class="card">
+      <div class="card-title"><span class="icon sub-icon">R</span> Renewals</div>
+
+      <div class="sub-section">
+        <div class="sub-section-title"><span class="icon sub-icon" style="width:14px;height:14px;font-size:.6rem;">S</span> Subscription Renewals</div>
+        <div class="input-group">
+          <label>GDR Rate</label>
+          <div class="input-wrap">
+            <input type="number" id="subGdr" class="has-suffix" value="94" step="0.1" min="0" max="100">
+            <span class="suffix">%</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Dollar Amount</label>
+          <div class="input-wrap">
+            <span class="prefix">$</span>
+            <input type="text" id="subDollars" class="has-prefix dollar-input" value="4,000,000">
+          </div>
+        </div>
+      </div>
+
+      <div class="sub-section">
+        <div class="sub-section-title"><span class="icon sw-icon" style="width:14px;height:14px;font-size:.6rem;">W</span> Switches</div>
+        <div class="input-group">
+          <label>GDR Rate</label>
+          <div class="input-wrap">
+            <input type="number" id="swGdr" class="has-suffix" value="91" step="0.1" min="0" max="100">
+            <span class="suffix">%</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Dollar Amount</label>
+          <div class="input-wrap">
+            <span class="prefix">$</span>
+            <input type="text" id="swDollars" class="has-prefix dollar-input" value="1,000,000">
+          </div>
+        </div>
+      </div>
+
+      <div class="renewals-total">
+        <span class="rt-label">Total Renewals</span>
+        <span class="rt-value" id="renTotal">$5,000,000</span>
+      </div>
+    </div>
+
+    <!-- Deferred Revenue Card -->
+    <div class="card">
+      <div class="card-title"><span class="icon def-icon">D</span> Deferred Revenue</div>
+      <div class="input-group">
+        <label>GDR Rate</label>
+        <div class="input-wrap">
+          <input type="number" id="defGdr" class="has-suffix" value="88" step="0.1" min="0" max="100">
+          <span class="suffix">%</span>
+        </div>
+      </div>
+      <div class="input-group">
+        <label>Dollar Amount</label>
+        <div class="input-wrap">
+          <span class="prefix">$</span>
+          <input type="text" id="defDollars" class="has-prefix dollar-input" value="2,000,000">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Result Row -->
+  <div class="result-section">
+    <div class="result-card">
+      <div class="gauge-container">
+        <svg class="gauge-svg" viewBox="0 0 200 120" id="gaugeSvg">
+          <!-- Background arc -->
+          <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#2e3347" stroke-width="14" stroke-linecap="round"/>
+          <!-- Colored segments -->
+          <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round"/>
+          <!-- Needle -->
+          <line id="needle" x1="100" y1="100" x2="100" y2="30" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" transform="rotate(-90, 100, 100)"/>
+          <circle cx="100" cy="100" r="5" fill="var(--text)"/>
+          <defs>
+            <linearGradient id="gaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="var(--red)"/>
+              <stop offset="45%" stop-color="var(--yellow)"/>
+              <stop offset="65%" stop-color="var(--green)"/>
+              <stop offset="100%" stop-color="var(--excellent)"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="label">Effective Weighted GDR</div>
+      <div class="value" id="effectiveGdr">--</div>
+      <span class="badge" id="ratingBadge">--</span>
+    </div>
+
+    <div class="result-card" style="justify-content: flex-start; text-align: left; align-items: stretch;">
+      <div class="label" style="text-align:center; margin-bottom:1rem;">Component Comparison</div>
+      <div class="bar-chart">
+        <div class="bar-row">
+          <div class="bar-label">Subscriptions</div>
+          <div class="bar-track">
+            <div class="bar-fill" id="subBar">--</div>
+            <div class="marker" style="left:90%" data-label="90%"></div>
+            <div class="marker" style="left:92%" data-label=""></div>
+            <div class="marker" style="left:95%" data-label="95%"></div>
+          </div>
+          <div class="bar-weight" id="subWeight">--</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Switches</div>
+          <div class="bar-track">
+            <div class="bar-fill" id="swBar">--</div>
+            <div class="marker" style="left:90%" data-label="90%"></div>
+            <div class="marker" style="left:92%" data-label=""></div>
+            <div class="marker" style="left:95%" data-label="95%"></div>
+          </div>
+          <div class="bar-weight" id="swWeight">--</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">Deferred Revenue</div>
+          <div class="bar-track">
+            <div class="bar-fill" id="defBar">--</div>
+            <div class="marker" style="left:90%" data-label="90%"></div>
+            <div class="marker" style="left:92%" data-label=""></div>
+            <div class="marker" style="left:95%" data-label="95%"></div>
+          </div>
+          <div class="bar-weight" id="defWeight">--</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label" style="font-weight:600;color:var(--text);">Effective GDR</div>
+          <div class="bar-track">
+            <div class="bar-fill" id="effBar">--</div>
+            <div class="marker" style="left:90%" data-label="90%"></div>
+            <div class="marker" style="left:92%" data-label=""></div>
+            <div class="marker" style="left:95%" data-label="95%"></div>
+          </div>
+          <div class="bar-weight" style="font-weight:600;" id="effWeight">100%</div>
+        </div>
+      </div>
+
+      <div class="scale">
+        <div class="scale-item"><span class="scale-dot" style="background:var(--red)"></span> &lt; 90% Critical</div>
+        <div class="scale-item"><span class="scale-dot" style="background:var(--yellow)"></span> 90–92% Caution</div>
+        <div class="scale-item"><span class="scale-dot" style="background:var(--green)"></span> 92–95% Good</div>
+        <div class="scale-item"><span class="scale-dot" style="background:var(--excellent)"></span> 95%+ Excellent</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breakdown -->
+  <div class="card breakdown-card">
+    <div class="card-title">Detailed Breakdown</div>
+    <div class="breakdown-row">
+      <div class="breakdown-item">
+        <div class="bi-label">Total Revenue Base</div>
+        <div class="bi-value" id="totalRev">--</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">Renewals Weight</div>
+        <div class="bi-value" id="renWeightPct">--</div>
+        <div class="bi-sub" id="renRetained">--</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">Deferred Weight</div>
+        <div class="bi-value" id="defWeightPct">--</div>
+        <div class="bi-sub" id="defRetained">--</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">Total Retained</div>
+        <div class="bi-value" id="totalRetained">--</div>
+        <div class="bi-sub" id="totalLost">--</div>
+      </div>
+      <div class="breakdown-item">
+        <div class="bi-label">Renewals Mix</div>
+        <div class="bi-value" id="renewalsMix">--</div>
+        <div class="bi-sub" id="renewalsMixSub">--</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  const inputs = ['subGdr', 'subDollars', 'swGdr', 'swDollars', 'defGdr', 'defDollars'];
+  inputs.forEach(id => $(id).addEventListener('input', calculate));
+
+  // Format dollar inputs with commas as user types
+  function formatDollarInput(e) {
+    const input = e.target;
+    const cursorPos = input.selectionStart;
+    const oldVal = input.value;
+    const oldLen = oldVal.length;
+
+    // Strip non-numeric chars (allow decimals)
+    const raw = oldVal.replace(/[^0-9]/g, '');
+    if (raw === '') { input.value = ''; calculate(); return; }
+
+    // Format with commas
+    const formatted = Number(raw).toLocaleString('en-US');
+    input.value = formatted;
+
+    // Adjust cursor position for added/removed commas
+    const newLen = formatted.length;
+    const diff = newLen - oldLen;
+    let newPos = cursorPos + diff;
+    if (newPos < 0) newPos = 0;
+    input.setSelectionRange(newPos, newPos);
+
+    calculate();
+  }
+
+  document.querySelectorAll('.dollar-input').forEach(el => {
+    el.addEventListener('input', formatDollarInput);
+    // Prevent non-numeric input except backspace/delete/arrows
+    el.addEventListener('keydown', e => {
+      if (e.ctrlKey || e.metaKey || e.key === 'Backspace' || e.key === 'Delete' ||
+          e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Tab' ||
+          e.key === 'Home' || e.key === 'End' || e.key === 'a') return;
+      if (!/[0-9]/.test(e.key)) e.preventDefault();
+    });
+  });
+
+  // Helper: parse dollar input (strip commas)
+  function parseDollar(id) {
+    return parseFloat($(id).value.replace(/[^0-9.]/g, '')) || 0;
+  }
+
+  function fmt(n) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+  }
+
+  function getColor(pct) {
+    if (pct < 90) return { color: 'var(--red)', cls: 'red', label: 'CRITICAL' };
+    if (pct < 92) return { color: 'var(--yellow)', cls: 'yellow', label: 'CAUTION' };
+    if (pct < 95) return { color: 'var(--green)', cls: 'green', label: 'GOOD' };
+    return { color: 'var(--excellent)', cls: 'excellent', label: 'EXCELLENT' };
+  }
+
+  function setNeedle(pct) {
+    const clamped = Math.max(80, Math.min(100, pct));
+    const angle = ((clamped - 80) / 20) * 180 - 90;
+    $('needle').setAttribute('transform', `rotate(${angle}, 100, 100)`);
+  }
+
+  function setBar(barEl, pct, info) {
+    barEl.style.width = Math.max(pct, 5) + '%';
+    barEl.style.background = info.color;
+    barEl.textContent = pct.toFixed(1) + '%';
+  }
+
+  function calculate() {
+    const subGdr = parseFloat($('subGdr').value) || 0;
+    const subDollars = parseDollar('subDollars');
+    const swGdr = parseFloat($('swGdr').value) || 0;
+    const swDollars = parseDollar('swDollars');
+    const defGdr = parseFloat($('defGdr').value) || 0;
+    const defDollars = parseDollar('defDollars');
+
+    const renDollars = subDollars + swDollars;
+    const totalDollars = renDollars + defDollars;
+
+    // Update renewals total display
+    $('renTotal').textContent = fmt(renDollars);
+
+    if (totalDollars === 0) {
+      $('effectiveGdr').textContent = '--';
+      return;
+    }
+
+    // Weights relative to total
+    const subW = subDollars / totalDollars;
+    const swW = swDollars / totalDollars;
+    const renW = renDollars / totalDollars;
+    const defW = defDollars / totalDollars;
+
+    // Blended renewals GDR (weighted by sub vs switch dollars)
+    const renBlendedGdr = renDollars > 0
+      ? (subGdr * subDollars + swGdr * swDollars) / renDollars
+      : 0;
+
+    // Effective GDR = weighted across all three components
+    const effective = (subGdr * subW) + (swGdr * swW) + (defGdr * defW);
+
+    const info = getColor(effective);
+    const subInfo = getColor(subGdr);
+    const swInfo = getColor(swGdr);
+    const defInfo = getColor(defGdr);
+
+    // Main result
+    $('effectiveGdr').textContent = effective.toFixed(2) + '%';
+    $('effectiveGdr').className = 'value color-' + info.cls;
+
+    const badge = $('ratingBadge');
+    badge.textContent = info.label;
+    badge.className = 'badge badge-' + info.cls;
+
+    // Gauge
+    setNeedle(effective);
+
+    // Bars — each component at its own GDR
+    setBar($('subBar'), subGdr, subInfo);
+    setBar($('swBar'), swGdr, swInfo);
+    setBar($('defBar'), defGdr, defInfo);
+    setBar($('effBar'), effective, info);
+
+    $('subWeight').textContent = (subW * 100).toFixed(1) + '%';
+    $('swWeight').textContent = (swW * 100).toFixed(1) + '%';
+    $('defWeight').textContent = (defW * 100).toFixed(1) + '%';
+
+    // Breakdown
+    $('totalRev').textContent = fmt(totalDollars);
+    $('renWeightPct').textContent = (renW * 100).toFixed(1) + '%';
+    $('defWeightPct').textContent = (defW * 100).toFixed(1) + '%';
+
+    const subRetained = subDollars * (subGdr / 100);
+    const swRetained = swDollars * (swGdr / 100);
+    const renRetainedVal = subRetained + swRetained;
+    const defRetainedVal = defDollars * (defGdr / 100);
+    const totalRetained = renRetainedVal + defRetainedVal;
+    const totalLost = totalDollars - totalRetained;
+
+    $('renRetained').textContent = 'Retained: ' + fmt(renRetainedVal) + ' (blended ' + renBlendedGdr.toFixed(1) + '%)';
+    $('defRetained').textContent = 'Retained: ' + fmt(defRetainedVal);
+    $('totalRetained').textContent = fmt(totalRetained);
+    $('totalLost').textContent = 'Lost: ' + fmt(totalLost);
+
+    // Renewals mix
+    const subPct = renDollars > 0 ? (subDollars / renDollars * 100) : 0;
+    const swPct = renDollars > 0 ? (swDollars / renDollars * 100) : 0;
+    $('renewalsMix').textContent = subPct.toFixed(0) + '/' + swPct.toFixed(0);
+    $('renewalsMixSub').textContent = 'Sub / Switch split';
+  }
+
+  calculate();
+</script>
+
+</body>
+</html>
