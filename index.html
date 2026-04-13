@@ -57,7 +57,6 @@
     gap: 1.5rem;
   }
 
-  /* Input Cards Row */
   .input-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -98,6 +97,7 @@
   .sub-icon { background: var(--accent); }
   .sw-icon { background: #8b5cf6; }
   .def-icon { background: #f59e0b; }
+  .puf-icon { background: #14b8a6; }
 
   .input-group {
     margin-bottom: 1rem;
@@ -150,7 +150,11 @@
   .input-wrap input.has-prefix { padding-left: 2rem; }
   .input-wrap input.has-suffix { padding-right: 2.2rem; }
 
-  /* Sub-section divider inside a card */
+  .input-wrap input.locked {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+
   .sub-section {
     background: var(--card-alt);
     border-radius: 10px;
@@ -179,31 +183,45 @@
     background: var(--card);
   }
 
-  /* Renewals total */
-  .renewals-total {
+  .locked-note {
+    font-size: .7rem;
+    color: #14b8a6;
+    font-style: italic;
+    margin-top: .25rem;
+  }
+
+  .section-total {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: rgba(108, 114, 203, .08);
-    border: 1px dashed rgba(108, 114, 203, .3);
     border-radius: 10px;
     padding: .75rem 1.1rem;
     margin-top: 1rem;
   }
 
-  .renewals-total .rt-label {
+  .section-total .rt-label {
     font-size: .78rem;
     color: var(--text-muted);
     font-weight: 500;
   }
 
-  .renewals-total .rt-value {
+  .section-total .rt-value {
     font-size: 1rem;
     font-weight: 700;
-    color: var(--accent);
   }
 
-  /* Result Section */
+  .ren-total {
+    background: rgba(108, 114, 203, .08);
+    border: 1px dashed rgba(108, 114, 203, .3);
+  }
+  .ren-total .rt-value { color: var(--accent); }
+
+  .def-total {
+    background: rgba(245, 158, 11, .08);
+    border: 1px dashed rgba(245, 158, 11, .3);
+  }
+  .def-total .rt-value { color: #f59e0b; }
+
   .result-section {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -259,7 +277,6 @@
   .color-green { color: var(--green); }
   .color-excellent { color: var(--excellent); }
 
-  /* Gauge */
   .gauge-container {
     width: 100%;
     max-width: 280px;
@@ -271,7 +288,6 @@
     height: auto;
   }
 
-  /* Breakdown */
   .breakdown-card {
     grid-column: 1 / -1;
   }
@@ -309,7 +325,6 @@
     margin-top: .2rem;
   }
 
-  /* Scale legend */
   .scale {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -332,7 +347,6 @@
     flex-shrink: 0;
   }
 
-  /* Bar chart */
   .bar-chart {
     margin-top: 1.5rem;
   }
@@ -383,7 +397,6 @@
     flex-shrink: 0;
   }
 
-  /* Threshold markers on bars */
   .bar-track .marker {
     position: absolute;
     top: 0;
@@ -414,14 +427,14 @@
 
 <div class="header">
   <h1>Effective GDR Calculator</h1>
-  <p>Weighted Gross Dollar Retention across renewals (subscriptions + switches) and deferred revenue</p>
+  <p>Weighted Gross Dollar Retention across renewals and deferred revenue (MYPA + MYPUF)</p>
 </div>
 
 <div class="dashboard">
 
   <!-- Input Row -->
   <div class="input-row">
-    <!-- Renewals Card (with sub-sections) -->
+    <!-- Renewals Card -->
     <div class="card">
       <div class="card-title"><span class="icon sub-icon">R</span> Renewals</div>
 
@@ -461,7 +474,7 @@
         </div>
       </div>
 
-      <div class="renewals-total">
+      <div class="section-total ren-total">
         <span class="rt-label">Total Renewals</span>
         <span class="rt-value" id="renTotal">$5,000,000</span>
       </div>
@@ -470,19 +483,47 @@
     <!-- Deferred Revenue Card -->
     <div class="card">
       <div class="card-title"><span class="icon def-icon">D</span> Deferred Revenue</div>
-      <div class="input-group">
-        <label>GDR Rate</label>
-        <div class="input-wrap">
-          <input type="number" id="defGdr" class="has-suffix" value="88" step="0.1" min="0" max="100">
-          <span class="suffix">%</span>
+
+      <div class="sub-section">
+        <div class="sub-section-title"><span class="icon def-icon" style="width:14px;height:14px;font-size:.6rem;">A</span> MYPA <span style="font-weight:400;color:var(--text-muted);text-transform:none;">— Paid Annually</span></div>
+        <div class="input-group">
+          <label>GDR Rate</label>
+          <div class="input-wrap">
+            <input type="number" id="mypaGdr" class="has-suffix" value="88" step="0.1" min="0" max="100">
+            <span class="suffix">%</span>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>Dollar Amount</label>
+          <div class="input-wrap">
+            <span class="prefix">$</span>
+            <input type="text" id="mypaDollars" class="has-prefix dollar-input" value="1,500,000">
+          </div>
         </div>
       </div>
-      <div class="input-group">
-        <label>Dollar Amount</label>
-        <div class="input-wrap">
-          <span class="prefix">$</span>
-          <input type="text" id="defDollars" class="has-prefix dollar-input" value="2,000,000">
+
+      <div class="sub-section">
+        <div class="sub-section-title"><span class="icon puf-icon" style="width:14px;height:14px;font-size:.6rem;">F</span> MYPUF <span style="font-weight:400;color:var(--text-muted);text-transform:none;">— Paid Up Front</span></div>
+        <div class="input-group">
+          <label>GDR Rate</label>
+          <div class="input-wrap">
+            <input type="number" id="mypufGdr" class="has-suffix locked" value="100" readonly>
+            <span class="suffix">%</span>
+          </div>
+          <div class="locked-note">Always 100% — paid up front</div>
         </div>
+        <div class="input-group">
+          <label>Dollar Amount</label>
+          <div class="input-wrap">
+            <span class="prefix">$</span>
+            <input type="text" id="mypufDollars" class="has-prefix dollar-input" value="500,000">
+          </div>
+        </div>
+      </div>
+
+      <div class="section-total def-total">
+        <span class="rt-label">Total Deferred</span>
+        <span class="rt-value" id="defTotal">$2,000,000</span>
       </div>
     </div>
   </div>
@@ -492,11 +533,8 @@
     <div class="result-card">
       <div class="gauge-container">
         <svg class="gauge-svg" viewBox="0 0 200 120" id="gaugeSvg">
-          <!-- Background arc -->
           <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#2e3347" stroke-width="14" stroke-linecap="round"/>
-          <!-- Colored segments -->
           <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="url(#gaugeGrad)" stroke-width="14" stroke-linecap="round"/>
-          <!-- Needle -->
           <line id="needle" x1="100" y1="100" x2="100" y2="30" stroke="var(--text)" stroke-width="2.5" stroke-linecap="round" transform="rotate(-90, 100, 100)"/>
           <circle cx="100" cy="100" r="5" fill="var(--text)"/>
           <defs>
@@ -538,14 +576,24 @@
           <div class="bar-weight" id="swWeight">--</div>
         </div>
         <div class="bar-row">
-          <div class="bar-label">Deferred Revenue</div>
+          <div class="bar-label">MYPA</div>
           <div class="bar-track">
-            <div class="bar-fill" id="defBar">--</div>
+            <div class="bar-fill" id="mypaBar">--</div>
             <div class="marker" style="left:90%" data-label="90%"></div>
             <div class="marker" style="left:92%" data-label=""></div>
             <div class="marker" style="left:95%" data-label="95%"></div>
           </div>
-          <div class="bar-weight" id="defWeight">--</div>
+          <div class="bar-weight" id="mypaWeight">--</div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-label">MYPUF</div>
+          <div class="bar-track">
+            <div class="bar-fill" id="mypufBar">--</div>
+            <div class="marker" style="left:90%" data-label="90%"></div>
+            <div class="marker" style="left:92%" data-label=""></div>
+            <div class="marker" style="left:95%" data-label="95%"></div>
+          </div>
+          <div class="bar-weight" id="mypufWeight">--</div>
         </div>
         <div class="bar-row">
           <div class="bar-label" style="font-weight:600;color:var(--text);">Effective GDR</div>
@@ -592,9 +640,9 @@
         <div class="bi-sub" id="totalLost">--</div>
       </div>
       <div class="breakdown-item">
-        <div class="bi-label">Renewals Mix</div>
-        <div class="bi-value" id="renewalsMix">--</div>
-        <div class="bi-sub" id="renewalsMixSub">--</div>
+        <div class="bi-label">Deferred Mix</div>
+        <div class="bi-value" id="defMix">--</div>
+        <div class="bi-sub" id="defMixSub">--</div>
       </div>
     </div>
   </div>
@@ -604,8 +652,8 @@
 <script>
   const $ = id => document.getElementById(id);
 
-  const inputs = ['subGdr', 'subDollars', 'swGdr', 'swDollars', 'defGdr', 'defDollars'];
-  inputs.forEach(id => $(id).addEventListener('input', calculate));
+  const allInputs = ['subGdr', 'subDollars', 'swGdr', 'swDollars', 'mypaGdr', 'mypaDollars', 'mypufDollars'];
+  allInputs.forEach(id => $(id).addEventListener('input', calculate));
 
   // Format dollar inputs with commas as user types
   function formatDollarInput(e) {
@@ -614,15 +662,12 @@
     const oldVal = input.value;
     const oldLen = oldVal.length;
 
-    // Strip non-numeric chars (allow decimals)
     const raw = oldVal.replace(/[^0-9]/g, '');
     if (raw === '') { input.value = ''; calculate(); return; }
 
-    // Format with commas
     const formatted = Number(raw).toLocaleString('en-US');
     input.value = formatted;
 
-    // Adjust cursor position for added/removed commas
     const newLen = formatted.length;
     const diff = newLen - oldLen;
     let newPos = cursorPos + diff;
@@ -634,7 +679,6 @@
 
   document.querySelectorAll('.dollar-input').forEach(el => {
     el.addEventListener('input', formatDollarInput);
-    // Prevent non-numeric input except backspace/delete/arrows
     el.addEventListener('keydown', e => {
       if (e.ctrlKey || e.metaKey || e.key === 'Backspace' || e.key === 'Delete' ||
           e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Tab' ||
@@ -643,7 +687,6 @@
     });
   });
 
-  // Helper: parse dollar input (strip commas)
   function parseDollar(id) {
     return parseFloat($(id).value.replace(/[^0-9.]/g, '')) || 0;
   }
@@ -676,14 +719,18 @@
     const subDollars = parseDollar('subDollars');
     const swGdr = parseFloat($('swGdr').value) || 0;
     const swDollars = parseDollar('swDollars');
-    const defGdr = parseFloat($('defGdr').value) || 0;
-    const defDollars = parseDollar('defDollars');
+    const mypaGdr = parseFloat($('mypaGdr').value) || 0;
+    const mypaDollars = parseDollar('mypaDollars');
+    const mypufGdr = 100; // Always 100%
+    const mypufDollars = parseDollar('mypufDollars');
 
     const renDollars = subDollars + swDollars;
+    const defDollars = mypaDollars + mypufDollars;
     const totalDollars = renDollars + defDollars;
 
-    // Update renewals total display
+    // Update totals
     $('renTotal').textContent = fmt(renDollars);
+    $('defTotal').textContent = fmt(defDollars);
 
     if (totalDollars === 0) {
       $('effectiveGdr').textContent = '--';
@@ -693,21 +740,25 @@
     // Weights relative to total
     const subW = subDollars / totalDollars;
     const swW = swDollars / totalDollars;
+    const mypaW = mypaDollars / totalDollars;
+    const mypufW = mypufDollars / totalDollars;
     const renW = renDollars / totalDollars;
     const defW = defDollars / totalDollars;
 
-    // Blended renewals GDR (weighted by sub vs switch dollars)
+    // Blended GDRs
     const renBlendedGdr = renDollars > 0
-      ? (subGdr * subDollars + swGdr * swDollars) / renDollars
-      : 0;
+      ? (subGdr * subDollars + swGdr * swDollars) / renDollars : 0;
+    const defBlendedGdr = defDollars > 0
+      ? (mypaGdr * mypaDollars + mypufGdr * mypufDollars) / defDollars : 0;
 
-    // Effective GDR = weighted across all three components
-    const effective = (subGdr * subW) + (swGdr * swW) + (defGdr * defW);
+    // Effective GDR = weighted across all four components
+    const effective = (subGdr * subW) + (swGdr * swW) + (mypaGdr * mypaW) + (mypufGdr * mypufW);
 
     const info = getColor(effective);
     const subInfo = getColor(subGdr);
     const swInfo = getColor(swGdr);
-    const defInfo = getColor(defGdr);
+    const mypaInfo = getColor(mypaGdr);
+    const mypufInfo = getColor(mypufGdr);
 
     // Main result
     $('effectiveGdr').textContent = effective.toFixed(2) + '%';
@@ -720,15 +771,17 @@
     // Gauge
     setNeedle(effective);
 
-    // Bars — each component at its own GDR
+    // Bars
     setBar($('subBar'), subGdr, subInfo);
     setBar($('swBar'), swGdr, swInfo);
-    setBar($('defBar'), defGdr, defInfo);
+    setBar($('mypaBar'), mypaGdr, mypaInfo);
+    setBar($('mypufBar'), mypufGdr, mypufInfo);
     setBar($('effBar'), effective, info);
 
     $('subWeight').textContent = (subW * 100).toFixed(1) + '%';
     $('swWeight').textContent = (swW * 100).toFixed(1) + '%';
-    $('defWeight').textContent = (defW * 100).toFixed(1) + '%';
+    $('mypaWeight').textContent = (mypaW * 100).toFixed(1) + '%';
+    $('mypufWeight').textContent = (mypufW * 100).toFixed(1) + '%';
 
     // Breakdown
     $('totalRev').textContent = fmt(totalDollars);
@@ -738,20 +791,22 @@
     const subRetained = subDollars * (subGdr / 100);
     const swRetained = swDollars * (swGdr / 100);
     const renRetainedVal = subRetained + swRetained;
-    const defRetainedVal = defDollars * (defGdr / 100);
+    const mypaRetained = mypaDollars * (mypaGdr / 100);
+    const mypufRetained = mypufDollars; // 100% retained
+    const defRetainedVal = mypaRetained + mypufRetained;
     const totalRetained = renRetainedVal + defRetainedVal;
     const totalLost = totalDollars - totalRetained;
 
     $('renRetained').textContent = 'Retained: ' + fmt(renRetainedVal) + ' (blended ' + renBlendedGdr.toFixed(1) + '%)';
-    $('defRetained').textContent = 'Retained: ' + fmt(defRetainedVal);
+    $('defRetained').textContent = 'Retained: ' + fmt(defRetainedVal) + ' (blended ' + defBlendedGdr.toFixed(1) + '%)';
     $('totalRetained').textContent = fmt(totalRetained);
     $('totalLost').textContent = 'Lost: ' + fmt(totalLost);
 
-    // Renewals mix
-    const subPct = renDollars > 0 ? (subDollars / renDollars * 100) : 0;
-    const swPct = renDollars > 0 ? (swDollars / renDollars * 100) : 0;
-    $('renewalsMix').textContent = subPct.toFixed(0) + '/' + swPct.toFixed(0);
-    $('renewalsMixSub').textContent = 'Sub / Switch split';
+    // Deferred mix
+    const mypaPct = defDollars > 0 ? (mypaDollars / defDollars * 100) : 0;
+    const mypufPct = defDollars > 0 ? (mypufDollars / defDollars * 100) : 0;
+    $('defMix').textContent = mypaPct.toFixed(0) + '/' + mypufPct.toFixed(0);
+    $('defMixSub').textContent = 'MYPA / MYPUF split';
   }
 
   calculate();
